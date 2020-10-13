@@ -81,9 +81,10 @@ I truly cannot understate the importance of following this rule, even (and
 be wrong.
 
 <details>
-  <summary>**Example**</summary>
-  For example, consider a simple `UPDATE` which cancels all knitting flows
-  making either of two particular styles:
+  <summary><strong>Example</strong></summary>
+
+For example, consider a simple `UPDATE` which cancels all knitting flows
+making either of two particular styles:
 
 ```sql
   -- BAD! DO NOT DO THIS!
@@ -94,8 +95,8 @@ be wrong.
     greige_sku like 'PH-FOO%' or greige_sku like 'PH-BAR%'
 ```
 
-  On running this query, you would see thousands of rows updated, because the
-  query evaluated:
+On running this query, you would see thousands of rows updated, because the
+query evaluated:
 
 ```sql
   where
@@ -103,10 +104,10 @@ be wrong.
     greige_sku like 'PH-BAR%'
 ```
 
-  Instead of the query you expected.
+Instead of the query you expected.
 
-  If, instead, `BEGIN`, `RETURNING *`, and `ROLLBACK` were used, this error
-  would have become quickly obvious:
+If, instead, `BEGIN`, `RETURNING *`, and `ROLLBACK` were used, this error
+would have become quickly obvious:
 
 ```sql
   -- Good! Do this!
@@ -219,45 +220,45 @@ WHERE st.location = 'SOME_LOCATION'
 ```
 
 <details>
-  <summary>**Explanation**</summary>
+  <summary><strong>Explanation</strong></summary>
 
-  Using consistent indent levels is important because it leads to more uniform
-  code, which groups together "like things".
+Using consistent indent levels is important because it leads to more uniform
+code, which groups together "like things".
 
-  For example, consider the following code:
-
-```python
-  a = some_function(foo,
-                    bar,
-                    baz=42)
-  another_thing = some_other_function(another_fiz,
-                                      another_biz,
-                                      baz=42)
-```
-
-  Even though the function arguments (`foo`, `bar`, and `baz`) are all the
-  "same things" - ie, arguments to a function call - they are at dramatically
-  different indent levels, which forces the reader's brain to pause and
-  understand that context of each indent block (ie, because it is not clear
-  from the indent alone).
-
-  Contrast that with:
+For example, consider the following code:
 
 ```python
-  a = some_function(
-      foo,
-      bar,
-      baz=42,
-  )
-  another_thing = some_other_function(
-      another_fiz
-      another_biz,
-      baz=42,
-  )
+a = some_function(foo,
+                  bar,
+                  baz=42)
+another_thing = some_other_function(another_fiz,
+                                    another_biz,
+                                    baz=42)
 ```
 
-   Which is more uniform, and makes it easier for the reader to understand the
-   context of each indent block without searching for as much context.
+Even though the function arguments (`foo`, `bar`, and `baz`) are all the
+"same things" - ie, arguments to a function call - they are at dramatically
+different indent levels, which forces the reader's brain to pause and
+understand that context of each indent block (ie, because it is not clear
+from the indent alone).
+
+Contrast that with:
+
+```python
+a = some_function(
+    foo,
+    bar,
+    baz=42,
+)
+another_thing = some_other_function(
+    another_fiz
+    another_biz,
+    baz=42,
+)
+```
+
+Which is more uniform, and makes it easier for the reader to understand the
+context of each indent block without searching for as much context.
 </details>
 
 ## Functions should have one "general return" and many "edge case returns"
@@ -299,31 +300,31 @@ def knitting_machine_get_last_sku(machine_number):
 ```
 
 <details>
-  <summary>**Explanation**</summary>
+  <summary><strong>Explanation</strong></summary>
 
-  Having one "general case" return and many "edge case" returns makes it easier
-  to read and understand a function for two reasons:
+Having one "general case" return and many "edge case" returns makes it easier
+to read and understand a function for two reasons:
 
-  1. The reader knows that the return statement at the bottom of the function
-     is what the author "expects" to happen, so it's easier for them to
-     understand the *intent* of the function, and figure out what it's
-     *supposed* to do.
+1. The reader knows that the return statement at the bottom of the function
+   is what the author "expects" to happen, so it's easier for them to
+   understand the *intent* of the function, and figure out what it's
+   *supposed* to do.
 
-  2. It reduces the amount of state the reader needs to keep in their head as
-     they are reading the function. Each time a reader encounters a level of
-     indent, to understand the code in that indent block, they must go back and
-     see what caused the indent (ex, if you see code inside an "if" statement,
-     to understand that code, you must also read an understand the "if"
-     statement); this is "state" the reader must keep track of. This style of
-     function generally reduces the amount of code that's indented, thus the
-     amount of "state" they need to keep in their head as they read.
+2. It reduces the amount of state the reader needs to keep in their head as
+   they are reading the function. Each time a reader encounters a level of
+   indent, to understand the code in that indent block, they must go back and
+   see what caused the indent (ex, if you see code inside an "if" statement,
+   to understand that code, you must also read an understand the "if"
+   statement); this is "state" the reader must keep track of. This style of
+   function generally reduces the amount of code that's indented, thus the
+   amount of "state" they need to keep in their head as they read.
 
-  3. It can make it easier to verify the function's correctness. Because the
-     reader can assume that all code which isn't indented is "general case",
-     they can assume that any necessary error checks have already been
-     performed. And if they want to verify that any particular check has been
-     performed, they only need to look at the top-level (ie, non-indented)
-     "if" statement so see whether the check in question has been performed.
+3. It can make it easier to verify the function's correctness. Because the
+   reader can assume that all code which isn't indented is "general case",
+   they can assume that any necessary error checks have already been
+   performed. And if they want to verify that any particular check has been
+   performed, they only need to look at the top-level (ie, non-indented)
+   "if" statement so see whether the check in question has been performed.
 </details>
 
 ## Line length
@@ -399,13 +400,13 @@ The following are guidelines for how lines should be split:
 ```
 
 <details>
-  <summary>**Explanation**</summary>
+  <summary><strong>Explanation</strong></summary>
 
-  This guidelines is another example of encouraging consistency: by putting
-  "one thing" on each line, indenting each line with one level of indenting,
-  and putting line joiners at the end of each line, the reader can easily scan
-  the first column of each line to understand the "point" of that line, instead
-  of needing to read each line to understand what it does.
+This guidelines is another example of encouraging consistency: by putting
+"one thing" on each line, indenting each line with one level of indenting,
+and putting line joiners at the end of each line, the reader can easily scan
+the first column of each line to understand the "point" of that line, instead
+of needing to read each line to understand what it does.
 </details>
 
 # Guidelines-in-progress
