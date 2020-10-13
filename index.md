@@ -39,14 +39,15 @@ the problem.
 For example:
 
 ```jsx
-Bad:
-	throw Error("Invalid value")
-	// What was the value? How was it being used? Why is it invalid?
-Good:
-	throw Error(`Invalid machine assigning flow: ${machineNumber} (does not exist)`)
-	throw Error(`Invalid completed tube count: ${count} (must be between 0 and 100)`)
-  // Provides context on why the error happened, includes the invalid value, and
-  // a short description of why it's invalid.
+// Bad:
+throw Error("Invalid value")
+// What was the value? How was it being used? Why is it invalid?
+
+// Good:
+throw Error(`Invalid machine assigning flow: ${machineNumber} (does not exist)`)
+throw Error(`Invalid completed tube count: ${count} (must be between 0 and 100)`)
+// Provides context on why the error happened, includes the invalid value, and
+// a short description of why it's invalid.
 ```
 
 ## Rules in SQL
@@ -65,14 +66,14 @@ updated
 
 ```sql
 -- BAD
-	update foo set bar = 1 where baz = 2;
+update foo set bar = 1 where baz = 2;
 
 -- GOOD
-	begin;
-	update foo set bar = 1 where baz = 2 returning *;
-	rollback;
-	-- visually confirm that the the rows being updated match expectations
-	-- then change the 'rollback' to a 'commit' and re-run the query.
+begin;
+update foo set bar = 1 where baz = 2 returning *;
+rollback;
+-- visually confirm that the rows being updated match expectations
+-- then change the 'rollback' to a 'commit' and re-run the query.
 ```
 
 I truly cannot understate the importance of following this rule, even (and
@@ -84,30 +85,30 @@ be wrong.
   For example, consider a simple `UPDATE` which cancels all knitting flows
   making either of two particular styles:
 
-  ```sql
+```sql
   -- BAD! DO NOT DO THIS!
   update knitting_flow
   set status = 'CANCELED'
   where
     status in ('ORDERED', 'ASSIGNED') and
     greige_sku like 'PH-FOO%' or greige_sku like 'PH-BAR%'
-  ```
+```
 
   On running this query, you would see thousands of rows updated, because the
   query evaluated:
 
-  ```sql
+```sql
   where
     (status in … and greige_sku like 'PH-FOO%') or
     greige_sku like 'PH-BAR%'
-  ```
+```
 
   Instead of the query you expected.
 
   If, instead, `BEGIN`, `RETURNING *`, and `ROLLBACK` were used, this error
   would have become quickly obvious:
 
-  ```sql
+```sql
   -- Good! Do this!
   begin;
   update knitting_flow
@@ -117,7 +118,7 @@ be wrong.
     greige_sku like 'PH-FOO%' or greige_sku like 'PH-BAR%'
   returning *;
   rollback;
-  ```
+```
 </details>
 
 # Strong Guidelines
@@ -155,66 +156,66 @@ In Python:
 
 ```python
 # Good:
-    foo = some_function(
-        bar,
-        baz=42,
-    )
-    bar = {
-      "some_key": "some_value",
-      "another_key": "another_value",
-    }
+foo = some_function(
+    bar,
+    baz=42,
+)
+bar = {
+  "some_key": "some_value",
+  "another_key": "another_value",
+}
 
 # Bad:
-    foo = some_function(bar,
-                        baz=42)
-    bar = {
-           "some_key": "some_value",
-           "another_key": "another_value",
-    }
+foo = some_function(bar,
+                    baz=42)
+bar = {
+       "some_key": "some_value",
+       "another_key": "another_value",
+}
 ```
 
 In JavaScript:
 ```javascript
 // Good:
-  const foo1 = someFunction(
-    bar,
-    { baz: 42 },
-  )
-  const foo2 = someFunction(bar, {
-    baz: 42,
-  })
-  const bar = {
-    someKey: 'someValue',
-    anotherKey: 'anotherValue',
-  }
+const foo1 = someFunction(
+  bar,
+  { baz: 42 },
+)
+const foo2 = someFunction(bar, {
+  baz: 42,
+})
+const bar = {
+  someKey: 'someValue',
+  anotherKey: 'anotherValue',
+}
 
 // Bad:
-  const foo = someFunction(bar,
-                           { baz: 42 })
-  const bar = { someKey: 'someValue',
-                anotherKey: 'anotherValue' }
+const foo = someFunction(bar,
+                         { baz: 42 })
+const bar = { someKey: 'someValue',
+              anotherKey: 'anotherValue' }
 ```
 
 In SQL:
 
 ```sql
 -- Good:
-  SELECT
-    st.foo,
-    dt.bar
-  FROM some_table AS st
-  LEFT JOIN different_table AS dt ON dt.some_table_id = st.id
-  WHERE
-    st.location = 'SOME_LOCATION' AND
-    dt.state = 'SOME_STATE'
+SELECT
+  st.foo,
+  dt.bar
+FROM some_table AS st
+LEFT JOIN different_table AS dt ON dt.some_table_id = st.id
+WHERE
+  st.location = 'SOME_LOCATION' AND
+  dt.state = 'SOME_STATE'
 
 -- Bad:
-  SELECT st.foo,
-         dt.bar
-  FROM some_table AS st
-  LEFT JOIN different_table AS dt ON dt.some_table_id = st.id
-  WHERE st.location = 'SOME_LOCATION'
-        AND dt.state = 'SOME_STATE'
+SELECT st.foo,
+       dt.bar
+FROM some_table AS st
+LEFT JOIN different_table AS dt ON dt.some_table_id = st.id
+WHERE st.location = 'SOME_LOCATION'
+      AND dt.state = 'SOME_STATE'
 ```
 
 <details>
@@ -225,14 +226,14 @@ In SQL:
 
   For example, consider the following code:
 
-  ```python
-    a = some_function(foo,
-                      bar,
-                      baz=42)
-    another_thing = some_other_function(another_fiz,
-                                        another_biz,
-                                        baz=42)
-  ```
+```python
+  a = some_function(foo,
+                    bar,
+                    baz=42)
+  another_thing = some_other_function(another_fiz,
+                                      another_biz,
+                                      baz=42)
+```
 
   Even though the function arguments (`foo`, `bar`, and `baz`) are all the
   "same things" - ie, arguments to a function call - they are at dramatically
@@ -242,18 +243,18 @@ In SQL:
 
   Contrast that with:
 
-  ```python
-    a = some_function(
-        foo,
-        bar,
-        baz=42,
-    )
-    another_thing = some_other_function(
-        another_fiz
-        another_biz,
-        baz=42,
-    )
-   ```
+```python
+  a = some_function(
+      foo,
+      bar,
+      baz=42,
+  )
+  another_thing = some_other_function(
+      another_fiz
+      another_biz,
+      baz=42,
+  )
+```
 
    Which is more uniform, and makes it easier for the reader to understand the
    context of each indent block without searching for as much context.
@@ -346,7 +347,7 @@ The following are guidelines for how lines should be split:
 
 1. There should be "one thing" per line:
 
-    ```javascript
+```javascript
     // Good
     const foo = [
       some_long_thing,
@@ -360,7 +361,7 @@ The following are guidelines for how lines should be split:
       some_long_thing, another_long_thing,
       third_long_thing, fourth_long_thing,
     ]
-  ```
+```
 
 2. Lines should be indented with "one level" of indenting (see "consistent
    indent levels", above)
@@ -369,7 +370,7 @@ The following are guidelines for how lines should be split:
 
    In JavaScript:
 
-   ```javascript
+```javascript
    // Good
    const foo = [
      some_long_thing,
@@ -381,11 +382,11 @@ The following are guidelines for how lines should be split:
      some_long_thing
      , another_long_thing
    ]
-   ```
+```
 
    In SQL:
 
-   ```sql
+```sql
    -- Good:
    WHERE
      foo = 'some_foo' AND
@@ -395,7 +396,7 @@ The following are guidelines for how lines should be split:
    WHERE
      foo = 'some_foo'
      AND some_bar = 'some_bar'
-   ```
+```
 
 <details>
   <summary>**Explanation**</summary>
@@ -414,22 +415,22 @@ complete examples:
 
 * Never have a function with non-obvious unnamed arguments, *especially* when they are the same type.
 
-   ```python
+```python
    Bad:  function saveUser(username: string, name: string, favoriteColor: string)
    Good: function saveUser(u: { username: string, name: string, favoriteColor: string })
    Good: def save_user(*, username, name, favorite_color)
-   ```
+```
 
    **EXERCISE:** why not?
 
 * API request and response bodies should never be a scalar, and should rarely be an array.
 
-   ```python
+```python
    Bad:  $.post("/foo", { data: "42" })
    Bad:  def post_foo(): return JsonResponse("42")
    Good: $.post("/foo", { data: { count: "42" }})
    Good: def post_foo(): return JsonResponse({ "count": "42" })
-   ```
+```
 
    **EXERCISE:** why not?
 
@@ -437,19 +438,19 @@ complete examples:
    1. All possible states (pending, error, and success) must be handled
    2. Buttons and other UI elements must be disabled while the request is in flight
 
-   ```jsx
+```jsx
    const saveReq = useAsyncPromise()
    const save = () => saveReq.bind(serverApi.saveSomeThing())
 
    Bad:  <Button onClick={save} />
    Good: <Button disabled={save.isPending} onClick={save} />{save.isError && …}
-   ```
+```
 
 * Understand, deeply, the definition of idempotency:
 
    Which of the following functions are likely idempotent?
 
-   ```jsx
+```jsx
    showConfirmationModal()
    setConfirmationModalVisible(true)
    printBagTag()
@@ -457,15 +458,15 @@ complete examples:
    closeFlow(currentFlow.id)
    setTubeCount(currentFlow.id, currentTubeCount)
    incrementTubeCount(curentFlow.id, 1)
-   ```
+```
 
 * React's `useEffect` should *only* be used to:
    1. Perform actions on component mount and unmount (ex, starting an interval with `setInterval`)
    2. Update non-React components in response to state changes (ex, changing the browser window's title)
    3. Update aggregate, cached, or asynchronously fetched values used by the view (ex, using `userReq.bind(serverApi.getUser(props.userId))` to fetch user data each time the `userId` changes)
 
-   ```jsx
+```jsx
    Bad:
 
    Good:
-   ```
+```
