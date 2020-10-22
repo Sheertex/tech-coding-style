@@ -50,6 +50,45 @@ throw Error(`Invalid completed tube count: ${count} (must be between 0 and 100)`
 // a short description of why it's invalid.
 ```
 
+
+## Rules in JavaScript / TypeScript
+
+### Rule: All possible states must be handled for every HTTP request
+
+For every HTTP request made by the front-end:
+
+ 1. All possible states (pending, error, and success) of every HTTP request
+    must be handled.
+ 2. The UI must reflect the state of every request (ex, buttons are disabled
+    while a request is pending, a loading spinner is shown, an error message
+    is displayed on failure).
+
+This is most simply done with ``useAsyncPromise()``:
+
+```jsx
+// Bad:
+const onSubmit = () => {
+  serverApi.saveSomeThing()
+}
+
+// Good:
+const req = useAsyncPromise()
+const onSubmit = () => {
+  req.bind(serverApi.saveSomeThing())
+}
+
+return <div>
+  <Button disabled={req.isPending} onClick={onSubmit} />
+  {req.isError && <LoadingError err={req.loadError} />}
+</div>
+```
+
+Other useful tools:
+
+* `<LoadingSpinner />`: `{req.isPending && <LoadingSpinner />}`
+* `renderLoadingPromise(...)`: `if (!req.isDone) return renderLoadingPromise(req)`
+
+
 ## Rules in SQL
 
 ### Rule: *always* wrap production queries in `BEGIN` and `ROLLBACK`
@@ -434,18 +473,6 @@ complete examples:
 ```
 
    **EXERCISE:** why not?
-
-* For every HTTP request made by the front-end:
-   1. All possible states (pending, error, and success) must be handled
-   2. Buttons and other UI elements must be disabled while the request is in flight
-
-```jsx
-   const saveReq = useAsyncPromise()
-   const save = () => saveReq.bind(serverApi.saveSomeThing())
-
-   Bad:  <Button onClick={save} />
-   Good: <Button disabled={save.isPending} onClick={save} />{save.isError && …}
-```
 
 * Understand, deeply, the definition of idempotency:
 
