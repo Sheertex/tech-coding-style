@@ -89,6 +89,43 @@ Other useful tools:
 * `renderLoadingPromise(...)`: `if (!req.isDone) return renderLoadingPromise(req)`
 
 
+## Rules in Python
+
+### Rule: Never use `except:`
+
+In Python, all `except` blocks should specify an exception type, even if it's
+`Exception`:
+
+```python
+# Bad
+try:
+  do_stuff()
+except: # Bad
+  handle_error()
+
+
+# Good
+try:
+  do_stuff()
+except Exception:
+  handle_error()
+```
+
+There are two reasons for this:
+
+1. Due to a quirk in Python's implementation, it will capture `KeyboardError`
+   (the exception raised when `ctrl-c` is pressed) and `SystemExit` (the
+   exception raised when `sys.exit()` is called), which can lead to code that
+   will never terminate, or otherwise behave unpredictably.
+
+   (In the *extremely* unlikely case that you intend to catch these exceptions,
+   use `except BaseException:`. But you almost certainly do not want to do
+   this.)
+
+2. It often leads to exception handling that is hard to debug. See also:
+   [Exception Handling Guidelines](#exception-handling-guidelines))
+
+
 ## Rules in SQL
 
 ### Rule: *always* wrap production queries in `BEGIN` and `ROLLBACK`
@@ -447,6 +484,90 @@ and putting line joiners at the end of each line, the reader can easily scan
 the first column of each line to understand the "point" of that line, instead
 of needing to read each line to understand what it does.
 </details>
+
+### Exception Handling Guidelines
+
+#### All languages: be careful about hiding bugs in exception handlers
+
+Consider the following code:
+
+```python
+try:
+  foo = get_some_value()
+except Exception: # Bad
+  foo = "default value"
+```
+
+Or the equivalent JavaScript:
+
+```javascript
+let foo
+try {
+  foo = getSomeValue()
+} catch (e) { // Bad
+  foo = "default value"
+}
+```
+
+
+In both examples, the code's author likely expected the `get_some_value()` /
+`getSomeValue()` function to raise some specific exception, and in the event of
+that exception, use a default value.
+
+But if the `get_some_value()` / `getSomeValue()` function raises an exception
+the code's author did not expect (ex, due to a bug, or some other error), then
+the default value will still be used, and it will be impossible to either
+notice or fix the underlying bug.
+
+Instead, exception handlers should be as specific as possible, and re-raise any
+exceptions they do not expect to catch. For example:
+
+```python
+try:
+  foo = get_some_value()
+except ValueError as e: # Good
+  if "default value not found" not in str(e):
+    raise
+  foo = "default value"
+```
+
+Or the equivalent JavaScript:
+
+```javascript
+let foo
+try {
+  foo = getSomeValue()
+} catch (e) { // Good
+  const isDefaultNotFound = (
+    e instanceof ValueError &&
+    e.toString().indexOf("default value not found") >= 0
+  )
+  if (!isDefaultNotFound)
+    throw e
+  foo = "default value"
+}
+```
+
+
+#### Python: ApiError
+
+In Python, use the `ApiError` exception to raise and error along with
+message/data to be returned to an API client.
+
+By convention, this can be even from HTTP-agnostic service methods, since -
+practically speaking - service methods are almost always called from HTTP,
+and non-HTTP callers can treat ApiErrors like regular exceptions.
+
+For example:
+
+```python
+def do_some_thing(user_id):
+    user = User.get(id=user_id)
+    if not user:
+        raise ApiError(404, f"User not found: {user_id!r}")
+    ...
+```
+
 
 # Guidelines-in-progress
 
