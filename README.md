@@ -549,7 +549,7 @@ try {
 ```
 
 
-#### Python: ApiError
+#### Python: `ApiError`
 
 In Python, use the `ApiError` exception to raise and error along with
 message/data to be returned to an API client.
