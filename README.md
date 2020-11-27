@@ -337,63 +337,78 @@ Which is more uniform, and makes it easier for the reader to understand the
 context of each indent block without searching for as much context.
 </details>
 
-## Functions should have one "general return" and many "edge case returns"
+## Edge cases should be handled with ``return`` or ``continue``, not ``else``
 
-Functions should - in general - have one "general case return" statement at the
-end, with many "edge case" / "exceptional case" return statements in the body.
-
-This is best understood by way of example. Consider a function which finds the
-last SKU knit by a particular knitting machine. In this example, the "general
-case" is "the knitting machine exists and has knit a SKU", and the "edge cases"
-are "the knitting machine doesn't exist" and "it has not knit anything".
+In general, if a function or loop contains one or more "edge case" checks
+before the "main body", the edge case checks should be handled first, and
+a ``return`` or ``continue`` should be used instead of an ``else``
+statement.
 
 For example:
 
 ```python
 # Good:
-def knitting_machine_get_last_sku(machine_number):
-    machine = KnittingMachine.get(number=machine_number)
-    if not machine:
-        # Edge case: the machine doesn't exist
+def get_user_settings_by_email(email):
+    user = User.get(email=email)
+    if not user:
+        # Edge case: the user does not exist
         return None
 
-    latest_flow = machine.get_latest_flow()
-    if not latest_flow:
-        # Edge case: the machine has never knit anything before
-        return None
+    settings = UserSettings.get_for_user(user)
+    if not settings:
+        # Edge case: the user does not have any settings
+        return UserSettings.get_default()
 
-    # General case: the machine has knit something
-    return latest_flow.sku
+    return settings
+
+# Good
+def send_login_reminder_emails(users):
+    for user in users:
+        if user.did_login_recently():
+            continue
+        if not user.account_is_active():
+            continue
+        email.send("login_reminder", user=user)
 
 # Bad:
-def knitting_machine_get_last_sku(machine_number):
-    machine = KnittingMachine.get(number=machine_number)
-    if machine:
-        latest_flow = machine.get_latest_flow()
-        if latest_flow:
-            return latest_flow.sku
-    return None
+def get_user_settings_by_email(email):
+    user = User.get(email=email)
+    if user:
+        settings = UserSettings.get_for_user(user)
+        if settings:
+            return settings
+        else:
+            return UserSettings.get_default()
+    else:
+        return None
+        
+# Bad
+def send_login_reminder_emails(users):
+    for user in users:
+        if not user.did_login_recently():
+            if user.account_is_active():
+                email.send("login_reminder", user=user)
 ```
 
 <details>
   <summary><strong>Explanation</strong></summary>
 
-Having one "general case" return and many "edge case" returns makes it easier
-to read and understand a function for two reasons:
+Handling edge cases with ``return`` or ``continue`` instead of ``else`` has
+a few benefits:
 
 1. The reader knows that the return statement at the bottom of the function
    is what the author "expects" to happen, so it's easier for them to
    understand the *intent* of the function, and figure out what it's
    *supposed* to do.
 
-2. It reduces the amount of state the reader needs to keep in their head as
-   they are reading the function. Each time a reader encounters a level of
-   indent, to understand the code in that indent block, they must go back and
-   see what caused the indent (ex, if you see code inside an "if" statement,
-   to understand that code, you must also read an understand the "if"
+2. It reduces indentation, and therefor the amount of state the reader needs to
+   keep in their head as they are reading the function. Each time a reader
+   encounters a level of indent, to understand the code in that indent block, they
+   must go back and see what caused the indent (ex, if you see code inside an "if"
+   statement, to understand that code, you must also read an understand the "if"
    statement); this is "state" the reader must keep track of. This style of
-   function generally reduces the amount of code that's indented, thus the
-   amount of "state" they need to keep in their head as they read.
+   function generally reduces the amount of code that's indented, thus the amount
+   of "state" they need to keep in their head as they read.
 
 3. It can make it easier to verify the function's correctness. Because the
    reader can assume that all code which isn't indented is "general case",
