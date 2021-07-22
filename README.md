@@ -1,4 +1,4 @@
-# Sheertex Automation Coding Style Rules and Guidelines
+# Sheertex Technology Coding Style Rules and Guidelines
 
 This rules and guidelines in this document exist so that code written at
 Sheertex is, in order of importance:
