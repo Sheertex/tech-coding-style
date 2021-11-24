@@ -563,6 +563,61 @@ try {
 }
 ```
 
+#### Python: errors in HTTP handlers and `500` errors
+
+HTTP handlers (`@route`s) should never need to catch `Exception` or return a
+`500` error. Exceptions raised in HTTP routes are indicitive of a bug in the
+underlying code, and should be handled by the Flask exception handling
+middleware, which will log them and return a `500` error to the caller:
+
+```python
+@route("/api/some/route")
+def api_some_route():
+  try:
+    return JsonResponse(do_some_thing())
+  except Exception as e:
+    # Bad: this exception could be the result of an underlying bug, but
+    # the error will not be logged, no alert will be sent to
+    # tech-software-alerts, and there will be no stack trace to help debug
+    # the error.
+    return ApiError({ "msg": "Error with some_thing: %r" %(e, ) }) # Bad
+```
+
+Instead, don't worry about catching unknown exceptions; they will be handled
+by Flask's middleware:
+
+```python
+@route("/api/some/route")
+def api_some_route():
+  # Good: exceptions will be caught and handled by the exception handling
+  # middleware.
+  return JsonResponse(do_some_thing()) # Good
+```
+
+#### Python: using `flask.abort()`
+
+The `flask.abort()` helper should not be used. It leads to less clear code (it
+raises an exception interally, but raising an exception explicitly is more
+obvious), and does not return a JSON response:
+
+```python
+@route("/api/some/route")
+def api_some_route():
+  if some_condition:
+    # Bad: abort() should not be used
+    abort() # Bad
+  return JsonResponse(do_some_thing())
+```
+
+Instead, an `ApiError(...)` should be raised:
+
+```python
+@route("/api/some/route")
+def api_some_route():
+  if some_condition:
+    raise ApiError("some_condition was not met") # Good
+  return JsonResponse(do_some_thing())
+```
 
 #### Python: `ApiError`
 
@@ -579,7 +634,7 @@ For example:
 def do_some_thing(user_id):
     user = User.get(id=user_id)
     if not user:
-        raise ApiError(404, f"User not found: {user_id!r}")
+        raise ApiError(404, f"User not found: {user_id!r}") # Good
     ...
 ```
 
