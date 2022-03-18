@@ -500,6 +500,28 @@ the first column of each line to understand the "point" of that line, instead
 of needing to read each line to understand what it does.
 </details>
 
+
+## React Component Props in Typescript
+
+[Context for this decision](https://github.com/Sheertex/sheertex-ops.com/pull/2071#discussion_r830137097)
+
+Within a React component, when using Typescript, the attributes of the props object should be declared in the type signature.
+
+```typescript
+// Good
+const Component = (p: {first: string, second: number}) {
+  ...
+}
+
+// Bad
+const Component = (p) {
+  const { first, second } = p
+}
+```
+
+Once declared, the attributes should be accessed as members of the `props` (or `p`) parameter without destructuring to additional variables.
+
+
 ### Exception Handling Guidelines
 
 #### All languages: be careful about hiding bugs in exception handlers
@@ -591,10 +613,17 @@ complete examples:
 
 * Never have a function with non-obvious unnamed arguments, *especially* when they are the same type.
 
+```typescript
+   // Bad:
+   function saveUser(username: string, name: string, favoriteColor: string) {}
+   
+   // Good:
+   function saveUser(u: { username: string, name: string, favoriteColor: string }) {}
+```
+   
 ```python
-   Bad:  function saveUser(username: string, name: string, favoriteColor: string)
-   Good: function saveUser(u: { username: string, name: string, favoriteColor: string })
-   Good: def save_user(*, username, name, favorite_color)
+   # Good:
+   def save_user(*, username, name, favorite_color)
 ```
 
    **EXERCISE:** why not?
