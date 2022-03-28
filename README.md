@@ -522,6 +522,119 @@ const Component = (p) {
 Once declared, the attributes should be accessed as members of the `props` (or `p`) parameter without destructuring to additional variables.
 
 
+## Python String Formatting
+
+In general, strings should be formatted using either `f"..."` string
+formatting, or `"..." %(...)` formatting. `"...".format(...)` should be
+avoided.
+
+As much as possible - and especially in log messages - values should be
+`repr`'d using `f"{...!r}"` or `"%r" %(...)`. This can help debugging when
+unexpected values arise (see explanation, below).
+
+**The `%d` formatter should be avoided** as it can raise an exception
+if the input value isn't an integer (eg, `log.info("bag tag id: %d",
+bag_tag.id) # BAD` will raise an exception if `bag_tag.id == None`).
+
+```python
+# GOOD:
+log.info("bag tag id: %r", bag_tag.id) # GOOD
+message = "sku added: %r" %(new_sku, ) # GOOD
+print(f"knitting machine: {knitting_machine.number!r}") # GOOD
+
+# BAD:
+log.info("bag tag id: %d", bag_tag.id) # BAD
+message = "sku added: {}".format(new_sku) # BAD
+print("knitting machine: {knitting_machine_number}".format(knitting_machine_number=knitting_machine.number) # BAD
+```
+
+<details>
+<summary><strong>Explanation</strong></summary>
+
+This guideline exists to promote consistent, robust, debuggable code.
+
+The `.format(...)` method is avoided for consistency (it's not frequently
+used in the codebase), and because it has no advantages over `f`-string
+formatting (`f"..."`).
+
+The `%r` formatter is generally preferred over the `%s` formatter -
+especially for log messages - because it can simplify debugging: if a variable
+has an unexpected type or value, that might be obscured by the `%s` formatter,
+where the `%r` formatter will often make the variable's type obvious.
+
+For example, consider the log message:
+
+```python
+def add_tubes_to_flow(flow_id, tube_count):
+  log.info("adding %s tubes to flow %s", tube_count, flow_id) # BAD
+  # ...
+```
+
+If the function is called with unexpected or invalid inputs, the log message
+will make it difficult to notice those errors:
+
+```
+>>> add_tubes_to_flow("", "42")
+INFO: adding 42 tubes to flow
+```
+
+Contrast with the same log message, but `%r` is used instead of `%s`, which
+makes it immediately obvious that the `tube_count` is a `str` instead of an
+`int`, and the `flow_id` is an empty string:
+
+```python
+>>> def add_tubes_to_flow(flow_id, tube_count):
+...   log.info("adding %r tubes to flow %r", tube_count, flow_id) # GOOD
+...   # ...
+>>> add_tubes_to_flow("", "42")
+INFO: adding '42' tubes to flow ''
+```
+
+The `%d` formatter should also generally be avoided, as it can cause unexpected
+exceptions if the input is not an integer. For example, consider the log
+message:
+
+```python
+def close_bag_tag(bag_tag):
+  log.info("closing bag tag: %d", bag_tag.id) # BAD
+  # ...
+```
+
+If the `bag_tag.id` is `None` (for example, because it was freshly created and
+not saved to the database yet), the log message will raise an exception:
+
+```
+>>> close_bag_tag(BagTag())
+...
+TypeError: %d format: a number is required, not NoneType
+```
+
+(this could also happen if, ex, the input is a `str` instead of an `int`)
+
+In the relatively rare situations where `%d` formatting is specifically
+necessary - for example, because the input is a `float` and only the integral
+portion should be displayed - explicitly casting the value to an `int` can
+make the intention of the code more obvious:
+
+```python
+log.info("duration: %s seconds", int(duration))
+```
+
+(and has the added benefit that, if the input value cannot be converted to
+an `int`, the original value will be included in the exception's message:
+
+```
+>>> int("foo")
+...
+ValueError: invalid literal for int() with base 10: 'foo'
+>>> "%d" %("foo", )
+...
+TypeError: %d format: a number is required, not str
+```
+
+</details>
+
+
 ### Exception Handling Guidelines
 
 #### All languages: be careful about hiding bugs in exception handlers
